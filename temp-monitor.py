@@ -20,7 +20,7 @@ def readDHT11(sensor, pin):
 	return(humidity, temperature)
 
 def senddweet(temp,humidity):
-	dweepy.dweet_for('TentMonitor', {'Temp':int(temp), 'Humid' : int(humidity)})
+	dweepy.dweet_for('TempMonitor', {'Temp':int(temp), 'Humid' : int(humidity)})
 
 def Monitor():
 	sensor = 11
