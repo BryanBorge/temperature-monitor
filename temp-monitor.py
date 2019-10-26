@@ -1,17 +1,26 @@
-from time import sleep
+import time
+import os
+import datetime
 import Adafruit_DHT
 import schedule
 from Adafruit_CharLCD import Adafruit_CharLCD
 import collections
 import dweepy
 import requests
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+from pprint import pprint
 
-lcd = Adafruit_CharLCD(rs=26, en=19,
-                       d4=13, d5=6, d6=5, d7=11,
-                       cols=16, lines=2)
-
+def InitSheet():
+	scope = ["https://spreadsheets.google.com/feeds","https://www.googleapis.com/auth/spreadsheets","https://www.googleapis.com/auth/drive.file","https://www.googleapis.com/auth/drive"]
+	creds = ServiceAccountCredentials.from_json_keyfile_name('creds.json',scope)
+	client = gspread.authorize(creds)
+	sheet = client.open('TentMonitor').sheet1
+	return sheet
+	
 def readDHT11(sensor, pin):
-	humidity, temperature = Adafruit_DHT.read_retry(sensor, pin)
+	humidity = None
+	temperature = None
 
 	while humidity is None or temperature is None:
 		humidity, temperature = Adafruit_DHT.read_retry(sensor, pin)
@@ -22,46 +31,50 @@ def readDHT11(sensor, pin):
 def senddweet(temp,humidity):
 	dweepy.dweet_for('TempMonitor', {'Temp':int(temp), 'Humid' : int(humidity)})
 
+def savedata(temp, humid):
+	sheet = InitSheet()	
+	insert_row = [str(datetime.datetime.now()),temp, humid]
+	insert_index = len(sheet.get_all_records())
+	sheet.insert_row(insert_row,insert_index+2)
+	print('saved')
+
+def runpending(schedule):
+	try:
+		schedule.run_pending()
+	except requests.exceptions.SSLError as e:
+		print('SSL Error\n')
+		print(e)
+	except requests.exceptions.ConnectionError as er:
+		print('HTTPConnectionPool Error\n')
+		print(er)
+
+def printLCD(h, t):
+	lcd = Adafruit_CharLCD(rs=26, en=19,
+                       d4=13, d5=6, d6=5, d7=11,
+                       cols=16, lines=2)	
+	lcd.clear()		
+	lcd.message('Humidity: {0} \n'.format(int(h)))
+	lcd.message('Temperature: {0} \n'.format(int(t)))	
+
 def Monitor():
 	sensor = 11
 	pin = 4
 	temp = 0
 	humidity = 0
-	minHumidity = 0
-	maxHumidity = 0
-	minTemp = 0
-	maxTemp = 0
-	readingCount = 1
 	schedule.every(30).seconds.do(lambda: senddweet(temp,humidity))
+	schedule.every(10).minutes.do(lambda: savedata(temp,humidity))
+
 	try:
 		while True:
 			humidity, temp = readDHT11(sensor, pin)
+			print('{0} \nHumidity: {1} %'.format(readingCount, int(humidity)))
+			print('Temperature: {0} F\n'.format(int(temp)))
+			printLCD(humidity, temp)
+			runpending(schedule)
 
-			if readingCount == 1:
-				minHumidity = maxHumidity = humidity
-				minTemp = maxTemp = temp
-			else: 
-				minTemp = temp if temp < minTemp else minTemp 
-				maxTemp = temp if temp > maxTemp else maxTemp
-				minHumidity = humidity if humidity < minHumidity else minHumidity
-				maxHumidity = humidity if humidity > maxHumidity else maxHumidity
-			try:
-				schedule.run_pending()
-			except requests.exceptions.SSLError as e:
-				print('Dweet error\n')
-
-			lcd.clear()		
-			lcd.message('Humidity: {0} \n'.format(int(humidity)))
-			lcd.message('Min: {0} Max: {1}'.format(int(minHumidity), int(maxHumidity)))
-			sleep(3)
-			lcd.clear()
-			lcd.message('Temperature: {0} \n'.format(int(temp)))
-			lcd.message('Min: {0} Max: {1}'.format(int(minTemp), int(maxTemp)))
-			sleep(2)
-
-			readingCount = readingCount + 1
 	except KeyboardInterrupt:
 		lcd.clear()
-		
+		print('Goodbye')
+
 if __name__ == '__main__':
 	Monitor()
