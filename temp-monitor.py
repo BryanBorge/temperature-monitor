@@ -61,9 +61,10 @@ def Monitor():
 	pin = 4
 	temp = 0
 	humidity = 0
+	readingCount = 1
 	schedule.every(30).seconds.do(lambda: senddweet(temp,humidity))
 	schedule.every(10).minutes.do(lambda: savedata(temp,humidity))
-
+		
 	try:
 		while True:
 			humidity, temp = readDHT11(sensor, pin)
@@ -71,6 +72,7 @@ def Monitor():
 			print('Temperature: {0} F\n'.format(int(temp)))
 			printLCD(humidity, temp)
 			runpending(schedule)
+			readingCount += 1
 
 	except KeyboardInterrupt:
 		lcd.clear()
