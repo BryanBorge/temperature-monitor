@@ -9,4 +9,4 @@ The dweet values are then read by [Freeboard.io](http://freeboard.io) and displa
 There is also a 16x2 LCD display wired up to the RaspberryPi which displays current temp/RH along with the min/max values. 
 
 10/26/19 Update:
-This script now sends temp and rh values to a google sheet every 10 minutes. I plan to use this sheet in the near future to create a custom dashboard and live graph. 
+This script now sends temp and rH values to a google sheet every 10 minutes. This sheet is conditionally formatted so that a with quick scroll I will be able to tell if my values are in the desired range. 
