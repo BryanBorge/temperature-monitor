@@ -2,7 +2,7 @@
 
 Main goal of this script is to monitor temp/RH remotely. 
 
-This is done by sending temp/RH values to [Dweet.io](http://dweet.io) every 30 seconds. You can read dweets from the last 24 hours by going to this [page](https://dweet.io/get/dweets/for/TempMonitor). 
+This is done by sending temp/RH values to [Dweet.io](http://dweet.io) every 30 seconds. You can read dweets from the last 24 hours by going to this [page](https://dweet.io/get/dweets/for/TempMonitor). (3/5/2020 - Currently not available as there is no data in the dweet)
 
 The dweet values are then read by [Freeboard.io](http://freeboard.io) and displayed in real time on a guage/histogram. My Freeboard dashboard can be found [here](https://freeboard.io/board/OM6K4R). (Currently using the 30 day trial so this link may be broken in the future)
 
